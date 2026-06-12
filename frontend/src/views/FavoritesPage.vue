@@ -11,6 +11,123 @@
       <p class="text-xl text-white/90">{{ favorites.length }} 个精选资源</p>
     </div>
 
+    <!-- License Risk Analysis Panel -->
+    <div v-if="favorites.length > 0 && analysis.warnings.length > 0" class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div class="bg-gradient-to-r from-orange-500 to-red-500 px-6 py-4 flex items-center space-x-3">
+        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+          <h3 class="text-xl font-bold text-white">许可证风险提醒</h3>
+          <p class="text-white/90 text-sm">检测到 {{ analysis.warnings.length }} 项需要注意的许可证相关问题</p>
+        </div>
+      </div>
+
+      <div class="px-6 py-5 space-y-4">
+        <div
+          v-for="(warning, idx) in analysis.warnings"
+          :key="idx"
+          class="rounded-xl p-5 border-l-4 transition-colors"
+          :class="{
+            'bg-red-50 border-red-500': warning.level === 'high',
+            'bg-yellow-50 border-yellow-500': warning.level === 'medium',
+            'bg-orange-50 border-orange-400': warning.level === 'warning',
+            'bg-blue-50 border-blue-400': warning.level === 'low'
+          }"
+        >
+          <div class="flex items-start justify-between gap-4 mb-2">
+            <div class="flex items-center space-x-2">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide"
+                :class="{
+                  'bg-red-100 text-red-700': warning.level === 'high',
+                  'bg-yellow-100 text-yellow-700': warning.level === 'medium',
+                  'bg-orange-100 text-orange-700': warning.level === 'warning',
+                  'bg-blue-100 text-blue-700': warning.level === 'low'
+                }"
+              >
+                {{ warning.level === 'high' ? '高风险' : warning.level === 'medium' ? '中风险' : warning.level === 'warning' ? '警告' : '提示' }}
+              </span>
+              <h4 class="font-semibold text-gray-900">{{ warning.title }}</h4>
+            </div>
+          </div>
+
+          <p class="text-gray-700 leading-relaxed mb-3">{{ warning.message }}</p>
+
+          <div v-if="warning.pair" class="flex flex-wrap gap-2 mb-2">
+            <div
+              v-for="p in warning.pair"
+              :key="p.id"
+              class="bg-white rounded-lg px-3 py-2 border shadow-sm text-sm"
+            >
+              <span class="font-medium text-gray-800">{{ p.name }}</span>
+              <span class="mx-1 text-gray-400">·</span>
+              <a
+                v-if="p.licenseUrl || p.meta?.url"
+                :href="p.licenseUrl || p.meta?.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-purple-600 hover:underline font-semibold"
+              >
+                {{ p.licenseNormalized }} ↗
+              </a>
+              <span v-else class="text-red-600 font-semibold">无许可证</span>
+            </div>
+          </div>
+
+          <div v-if="warning.relatedItems && warning.relatedItems.length" class="flex flex-wrap gap-2 mb-2">
+            <span class="text-sm text-gray-600 mr-1 self-center">相关资源：</span>
+            <div
+              v-for="r in warning.relatedItems"
+              :key="r.id"
+              class="bg-white rounded-lg px-3 py-2 border shadow-sm text-sm"
+            >
+              <span class="font-medium text-gray-800">{{ r.name }}</span>
+              <span class="mx-1 text-gray-400">·</span>
+              <a
+                v-if="r.licenseUrl || r.meta?.url"
+                :href="r.licenseUrl || r.meta?.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-purple-600 hover:underline font-semibold"
+              >
+                {{ r.licenseNormalized }} ↗
+              </a>
+            </div>
+          </div>
+
+          <div v-if="warning.targetId" class="text-sm">
+            <span class="text-gray-600 mr-1">涉及资源：</span>
+            <span class="font-medium text-gray-800">{{ warning.targetName }}</span>
+          </div>
+        </div>
+
+        <p class="text-xs text-gray-500 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+          ⚠️ 以上仅为基于开源许可证常见规则的风险提示，不构成法律意见。项目实际合规情况请结合具体使用方式并咨询专业法务。
+        </p>
+      </div>
+    </div>
+
+    <!-- License Stats Summary -->
+    <div v-if="favorites.length > 0" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="bg-white rounded-xl p-5 shadow-lg">
+        <div class="text-sm text-gray-500 mb-1">收藏总数</div>
+        <div class="text-3xl font-bold text-gray-900">{{ analysis.stats.total }}</div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-lg">
+        <div class="text-sm text-gray-500 mb-1">低风险许可</div>
+        <div class="text-3xl font-bold text-green-600">{{ analysis.stats.byRisk.low }}</div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-lg">
+        <div class="text-sm text-gray-500 mb-1">中风险许可</div>
+        <div class="text-3xl font-bold text-yellow-600">{{ analysis.stats.byRisk.medium }}</div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-lg">
+        <div class="text-sm text-gray-500 mb-1">高风险/未标注</div>
+        <div class="text-3xl font-bold text-red-600">{{ analysis.stats.byRisk.high + analysis.stats.noLicense }}</div>
+      </div>
+    </div>
+
     <!-- Loading Skeletons -->
     <div v-if="loading" class="space-y-4">
       <div v-for="i in 3" :key="i" class="bg-white rounded-xl p-6 animate-pulse">
@@ -27,8 +144,19 @@
           v-for="item in favorites"
           :key="item.id"
           class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+          :class="{ 'ring-4 ring-red-400 ring-opacity-60': !item.license }"
         >
           <div class="p-6">
+            <div v-if="!item.license" class="mb-4 bg-red-50 border border-red-300 rounded-lg px-4 py-3 flex items-start space-x-3">
+              <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <div class="font-semibold text-red-800">⚠️ 未标注许可证</div>
+                <div class="text-sm text-red-700">该资源没有明确的授权说明，使用前请自行确认其许可条款，避免版权风险。</div>
+              </div>
+            </div>
+
             <div class="flex justify-between items-start gap-4 mb-4">
               <div class="flex-1">
                 <h4 class="text-xl font-semibold text-gray-900 mb-3 leading-tight">
@@ -44,6 +172,37 @@
                     </svg>
                     <span>{{ item.size }}</span>
                   </span>
+                  <a
+                    v-if="item.license"
+                    :href="item.license_url || getLicenseMeta(item.license)?.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex items-center space-x-1 transition-opacity hover:opacity-80"
+                    :class="getLicenseBadgeClass(item.license)"
+                    :title="getLicenseMeta(item.license)?.description || '查看授权说明'"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <span>{{ item.license }}</span>
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                  <span
+                    v-else
+                    class="px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex items-center space-x-1"
+                    :class="getLicenseBadgeClass(null)"
+                    title="该资源未标注许可证"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>无许可证</span>
+                  </span>
+                </div>
+                <div v-if="item.license && getLicenseMeta(item.license)?.description" class="mt-3 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+                  {{ getLicenseMeta(item.license).description }}
                 </div>
               </div>
               <button
@@ -92,6 +251,8 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
+              <span>{{ formatDate(item.created_at) }}</span>
+              <span v-if="item.source" class="ml-auto text-gray-500">来源：{{ item.source }}</span>
             </div>
           </div>
         </div>
@@ -153,14 +314,33 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import api from '../api'
+import { analyzeFavorites, normalizeLicense, getLicenseMeta } from '../utils/licenseAnalyzer'
 
 const favorites = ref([])
 const loading = ref(false)
 const toast = ref({ show: false, message: '', type: 'success' })
 const showConfirm = ref(false)
 const deleteId = ref(null)
+
+const analysis = computed(() => analyzeFavorites(favorites.value))
+
+const getLicenseBadgeClass = (license) => {
+  const normalized = normalizeLicense(license)
+  if (!normalized) {
+    return 'bg-red-100 text-red-700 border border-red-300'
+  }
+  const meta = getLicenseMeta(normalized)
+  switch (meta?.riskLevel) {
+    case 'high':
+      return 'bg-red-50 text-red-700 border border-red-300'
+    case 'medium':
+      return 'bg-yellow-50 text-yellow-700 border border-yellow-400'
+    default:
+      return 'bg-green-50 text-green-700 border border-green-300'
+  }
+}
 
 const showToast = (message, type = 'success') => {
   toast.value = { show: true, message, type }
@@ -203,6 +383,7 @@ const copyMagnet = (magnet) => {
 }
 
 const formatDate = (dateStr) => {
+  if (!dateStr) return ''
   const date = new Date(dateStr)
   return date.toLocaleString('zh-CN')
 }

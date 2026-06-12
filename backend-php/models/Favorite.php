@@ -12,6 +12,8 @@ class Favorite {
     public $leechers;
     public $category;
     public $source;
+    public $license;
+    public $license_url;
     public $created_at;
 
     public function __construct($db) {
@@ -21,7 +23,7 @@ class Favorite {
     // Create favorite
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
-                  SET name=:name, magnet=:magnet, size=:size, seeders=:seeders, leechers=:leechers, category=:category, source=:source";
+                  SET name=:name, magnet=:magnet, size=:size, seeders=:seeders, leechers=:leechers, category=:category, source=:source, license=:license, license_url=:license_url";
         
         $stmt = $this->conn->prepare($query);
 
@@ -33,6 +35,8 @@ class Favorite {
         $this->leechers = htmlspecialchars(strip_tags($this->leechers));
         $this->category = htmlspecialchars(strip_tags($this->category));
         $this->source = htmlspecialchars(strip_tags($this->source));
+        $this->license = $this->license ? htmlspecialchars(strip_tags($this->license)) : null;
+        $this->license_url = $this->license_url ? htmlspecialchars(strip_tags($this->license_url)) : null;
 
         // Bind data
         $stmt->bindParam(":name", $this->name);
@@ -42,6 +46,8 @@ class Favorite {
         $stmt->bindParam(":leechers", $this->leechers);
         $stmt->bindParam(":category", $this->category);
         $stmt->bindParam(":source", $this->source);
+        $stmt->bindParam(":license", $this->license);
+        $stmt->bindParam(":license_url", $this->license_url);
 
         if($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();

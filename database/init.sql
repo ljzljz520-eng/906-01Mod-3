@@ -27,9 +27,12 @@ CREATE TABLE IF NOT EXISTS favorites (
   leechers INT DEFAULT 0 COMMENT '下载数',
   category VARCHAR(100) COMMENT '分类',
   source VARCHAR(50) COMMENT '来源站点',
+  license VARCHAR(100) COMMENT '许可证类型',
+  license_url VARCHAR(500) COMMENT '许可证说明链接',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   INDEX idx_created_at (created_at),
   INDEX idx_source (source),
+  INDEX idx_license (license),
   UNIQUE INDEX idx_magnet (magnet(255))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='收藏表';
 
@@ -41,26 +44,54 @@ INSERT INTO search_history (keyword, query, created_at) VALUES
 ('1337x', 'The Matrix', DATE_SUB(NOW(), INTERVAL 5 DAY));
 
 -- 插入示例收藏数据
-INSERT INTO favorites (name, magnet, size, seeders, leechers, category, source, created_at) VALUES
+INSERT INTO favorites (name, magnet, size, seeders, leechers, category, source, license, license_url, created_at) VALUES
 (
-  'Avengers: Endgame (2019) [1080p]',
-  'magnet:?xt=urn:btih:EXAMPLE1234567890ABCDEF&dn=Avengers+Endgame',
+  'React Library v18.2.0',
+  'magnet:?xt=urn:btih:EXAMPLE1234567890ABCDEF&dn=React',
   '2.5 GB',
   1250,
   85,
-  'Movies',
+  'Software',
   '1337x',
+  'MIT',
+  'https://github.com/facebook/react/blob/main/LICENSE',
   DATE_SUB(NOW(), INTERVAL 1 DAY)
 ),
 (
-  'The Dark Knight (2008) [720p]',
-  'magnet:?xt=urn:btih:EXAMPLE0987654321FEDCBA&dn=The+Dark+Knight',
+  'Linux Kernel v6.5 Source',
+  'magnet:?xt=urn:btih:EXAMPLE0987654321FEDCBA&dn=Linux+Kernel',
   '1.8 GB',
   890,
   42,
-  'Movies',
+  'Software',
   'yts',
+  'GPL-2.0',
+  'https://www.kernel.org/category/licenses.html',
   DATE_SUB(NOW(), INTERVAL 3 DAY)
+),
+(
+  'MongoDB Community Server',
+  'magnet:?xt=urn:btih:EXAMPLE1111111111111111&dn=MongoDB',
+  '500 MB',
+  500,
+  120,
+  'Database',
+  '1337x',
+  'SSPL',
+  'https://www.mongodb.com/licensing/server-side-public-license',
+  DATE_SUB(NOW(), INTERVAL 5 DAY)
+),
+(
+  'Proprietary DRM Tool',
+  'magnet:?xt=urn:btih:EXAMPLE2222222222222222&dn=DRMTool',
+  '80 MB',
+  50,
+  200,
+  'Tools',
+  'ThePirateBay',
+  NULL,
+  NULL,
+  DATE_SUB(NOW(), INTERVAL 7 DAY)
 );
 
 -- 显示表结构

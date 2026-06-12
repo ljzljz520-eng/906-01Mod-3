@@ -104,6 +104,8 @@ class ApiController {
         $this->favorite->leechers = $data->leechers ?? 0;
         $this->favorite->category = $data->category;
         $this->favorite->source = $data->source;
+        $this->favorite->license = $data->license ?? null;
+        $this->favorite->license_url = $data->license_url ?? null;
 
         if ($this->favorite->create()) {
             echo json_encode([
@@ -138,22 +140,39 @@ class ApiController {
 
     private function generateDemoData($query, $provider, $page) {
         $demoTorrents = [];
-        // Deterministic random seed based on query length relative to day to make it semi-consistent but changing
-        // Actually for PHP just using rand is fine for demo
+        
+        $licenses = [
+            ['type' => 'MIT', 'url' => 'https://opensource.org/licenses/MIT'],
+            ['type' => 'Apache-2.0', 'url' => 'https://www.apache.org/licenses/LICENSE-2.0'],
+            ['type' => 'GPL-3.0', 'url' => 'https://www.gnu.org/licenses/gpl-3.0.en.html'],
+            ['type' => 'AGPL-3.0', 'url' => 'https://www.gnu.org/licenses/agpl-3.0.en.html'],
+            ['type' => 'BSD-3-Clause', 'url' => 'https://opensource.org/licenses/BSD-3-Clause'],
+            ['type' => 'MPL-2.0', 'url' => 'https://www.mozilla.org/en-US/MPL/2.0/'],
+            ['type' => 'LGPL-3.0', 'url' => 'https://www.gnu.org/licenses/lgpl-3.0.en.html'],
+            ['type' => 'Unlicense', 'url' => 'https://unlicense.org/'],
+            ['type' => null, 'url' => null],
+            ['type' => 'SSPL', 'url' => 'https://www.mongodb.com/licensing/server-side-public-license'],
+        ];
+        
+        $categories = ['Software', 'Library', 'Framework', 'Database', 'Tools', 'SDK'];
         
         $count = 5;
         for ($i = 0; $i < $count; $i++) {
             $randomString = substr(str_shuffle("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 6);
+            $licenseInfo = $licenses[array_rand($licenses)];
+            $category = $categories[array_rand($categories)];
             
             $item = [
-                'Name' => "$query Result " . ($i + 1) . " [$provider] [1080p]",
+                'Name' => "$query " . ucfirst($category) . " v" . rand(1, 10) . "." . rand(0, 9) . "." . rand(0, 99) . " [$provider]",
                 'Magnet' => "magnet:?xt=urn:btih:DEMO$randomString&dn=" . urlencode($query),
                 'Size' => rand(1, 20) . "." . rand(0, 99) . " GB",
                 'Seeders' => rand(50, 2000),
                 'Leechers' => rand(10, 500),
-                'Category' => 'Movies',
+                'Category' => $category,
                 'Url' => "https://example.com/torrent/" . strtolower(str_replace(' ', '-', $query)) . "-$i",
-                'DateUploaded' => rand(1, 30) . ' days ago'
+                'DateUploaded' => rand(1, 30) . ' days ago',
+                'License' => $licenseInfo['type'],
+                'LicenseUrl' => $licenseInfo['url']
             ];
             $demoTorrents[] = $item;
         }
