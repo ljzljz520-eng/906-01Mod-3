@@ -63,15 +63,17 @@
               <span class="font-medium text-gray-800">{{ p.name }}</span>
               <span class="mx-1 text-gray-400">·</span>
               <a
-                v-if="p.licenseUrl || p.meta?.url"
-                :href="p.licenseUrl || p.meta?.url"
+                v-if="p.licenseUrl"
+                :href="p.licenseUrl"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="text-purple-600 hover:underline font-semibold"
               >
                 {{ p.licenseNormalized }} ↗
               </a>
-              <span v-else class="text-red-600 font-semibold">无许可证</span>
+              <span v-else class="font-semibold" :class="p.licenseNormalized ? 'text-gray-700' : 'text-red-600'">
+                {{ p.licenseNormalized || '无许可证' }}
+              </span>
             </div>
           </div>
 
@@ -85,14 +87,15 @@
               <span class="font-medium text-gray-800">{{ r.name }}</span>
               <span class="mx-1 text-gray-400">·</span>
               <a
-                v-if="r.licenseUrl || r.meta?.url"
-                :href="r.licenseUrl || r.meta?.url"
+                v-if="r.licenseUrl"
+                :href="r.licenseUrl"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="text-purple-600 hover:underline font-semibold"
               >
                 {{ r.licenseNormalized }} ↗
               </a>
+              <span v-else class="font-semibold text-gray-700">{{ r.licenseNormalized }}</span>
             </div>
           </div>
 
@@ -174,18 +177,19 @@
                   </span>
                   <a
                     v-if="item.license"
-                    :href="item.license_url || getLicenseMeta(item.license)?.url"
+                    :href="item.license_url || '#'"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex items-center space-x-1 transition-opacity hover:opacity-80"
                     :class="getLicenseBadgeClass(item.license)"
-                    :title="getLicenseMeta(item.license)?.description || '查看授权说明'"
+                    :title="item.license_url ? '查看该资源的授权说明' : '该资源未提供授权链接'"
+                    @click.prevent="item.license_url ? window.open(item.license_url, '_blank') : null"
                   >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     <span>{{ item.license }}</span>
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg v-if="item.license_url" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                   </a>

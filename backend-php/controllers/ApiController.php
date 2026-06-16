@@ -156,23 +156,38 @@ class ApiController {
         
         $categories = ['Software', 'Library', 'Framework', 'Database', 'Tools', 'SDK'];
         
+        $seed = crc32($query . $provider . $page);
+        
         $count = 5;
         for ($i = 0; $i < $count; $i++) {
-            $randomString = substr(str_shuffle("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 6);
-            $licenseInfo = $licenses[array_rand($licenses)];
-            $category = $categories[array_rand($categories)];
+            $hash = abs(crc32($query . $provider . $page . $i));
+            $randomString = strtoupper(substr(hash('sha256', $query . $i), 0, 6));
+            $licenseInfo = $licenses[$hash % count($licenses)];
+            $category = $categories[($hash >> 4) % count($categories)];
+            
+            $versionMajor = ($hash % 10) + 1;
+            $versionMinor = (($hash >> 8) % 10);
+            $versionPatch = (($hash >> 16) % 100);
+            $sizeValue = (($hash >> 4) % 20) + 1;
+            $sizeDecimal = (($hash >> 12) % 100);
+            $seeders = (($hash >> 8) % 1950) + 50;
+            $leechers = (($hash >> 16) % 490) + 10;
+            $daysAgo = (($hash >> 4) % 30) + 1;
+            
+            $resourceUrl = "https://example.com/project/" . strtolower(str_replace(' ', '-', $query)) . "-$i";
+            $licenseUrl = $licenseInfo['type'] ? $resourceUrl . '/blob/main/LICENSE' : null;
             
             $item = [
-                'Name' => "$query " . ucfirst($category) . " v" . rand(1, 10) . "." . rand(0, 9) . "." . rand(0, 99) . " [$provider]",
+                'Name' => "$query " . ucfirst($category) . " v$versionMajor.$versionMinor.$versionPatch [$provider]",
                 'Magnet' => "magnet:?xt=urn:btih:DEMO$randomString&dn=" . urlencode($query),
-                'Size' => rand(1, 20) . "." . rand(0, 99) . " GB",
-                'Seeders' => rand(50, 2000),
-                'Leechers' => rand(10, 500),
+                'Size' => "$sizeValue.$sizeDecimal GB",
+                'Seeders' => $seeders,
+                'Leechers' => $leechers,
                 'Category' => $category,
-                'Url' => "https://example.com/torrent/" . strtolower(str_replace(' ', '-', $query)) . "-$i",
-                'DateUploaded' => rand(1, 30) . ' days ago',
+                'Url' => $resourceUrl,
+                'DateUploaded' => "$daysAgo days ago",
                 'License' => $licenseInfo['type'],
-                'LicenseUrl' => $licenseInfo['url']
+                'LicenseUrl' => $licenseUrl
             ];
             $demoTorrents[] = $item;
         }
